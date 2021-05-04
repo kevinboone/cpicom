@@ -1,3 +1,4 @@
+build_arm
 build_pico
 build_host
 samples
