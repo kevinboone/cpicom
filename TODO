@@ -1,0 +1,13 @@
+ysend is still not working reliably on the Pico, although it works on Linux.
+
+Most the of the built-in shell commands are crude, and need further work.
+
+Implement a program search path.
+
+Some work needs to be done on buffering character output. Repeated calls
+to putch() with single characters are absurdly slow on the Pico. That's
+perhaps not a huge deal in something that is generally slow, but it's still
+not very elegant. 
+
+TYPE command doesn't page.
+
