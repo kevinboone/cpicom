@@ -395,6 +395,12 @@ timing. And timing is notoriously imperfect on CP/M, because the
 hardware provides no timing facilities. Sticking to WordStar
 keystrokes is probably safer.
 
+### YModem issues
+
+The ymodem sender reads the whole file into memory before sending it
+to the receiver. That's the Pico memory, not the Z80 memory, but
+this still creates a limit of about 200kB on file sizes.
+
 ## Author and legal
 
 The Z80 CPU emulator engine is largely based on work by Parag Patel from the

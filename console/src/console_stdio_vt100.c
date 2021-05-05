@@ -247,7 +247,7 @@ int consolestdiovt100_get_char_timeout (void *context, int msec)
 #if PICO_ON_DEVICE
   int c;
   int loops = 0;
-  while ((c = getchar_timeout_us (0)) < 0 && loops < msec)
+  while ((c = getchar_timeout_us (0)) < 0 && loops < msec) 
     {
     sleep_us (1000);
     loops++;

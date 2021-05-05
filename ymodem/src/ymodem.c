@@ -7,7 +7,9 @@
   (c)2021 Kevin Boone, GPLv3.0
 
   Based on work placed into the public domain by 
-  Fredrik Hederstierna, 2014
+  Fredrik Hederstierna, 2014. I'll tidy this up and document it properly,
+  if I ever get time. Right now, it works, and I don't want to fiddle
+  with it.
 
 =========================================================================*/
 
@@ -16,6 +18,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdarg.h>
 #include <fcntl.h>
 #include "pico/stdlib.h" 
 #include "files/compat.h" 
@@ -49,19 +52,24 @@
 #define YM_ABT1                    0x41 
 #define YM_ABT2                    0x61 
 
-//#define write_log(x)
-
 /*=========================================================================
 
-   
+  write_log 
 
 =========================================================================*/
-static void write_log (const char *s)
+static void write_log (const char *fmt,...)
   {
+  /*
+  va_list ap;
+  va_start (ap, fmt);
   MYFILE *f = my_fopen ("ymlog.txt", "a");
+  char s[256];
+  vsprintf (s, fmt, ap);
   my_fwrite (s, 1, strlen (s), f);
   my_fwrite ("\n", 1, 1, f);
   my_fclose (f);
+  va_end (ap);
+  */
   }
 
 /*=========================================================================
@@ -102,7 +110,7 @@ static uint16_t ymodem_crc16 (const uint8_t *buf, uint16_t len)
 
 =========================================================================*/
 static void ymodem_read_32 (const uint8_t* buf, uint32_t *val)
-{
+  {
   const uint8_t *s = buf;
   uint32_t res = 0;
   uint8_t c;
@@ -527,11 +535,10 @@ static uint32_t ymodem_writeU32 (uint32_t val, uint8_t *buf)
   ymodem_send_packet
 
 =========================================================================*/
-static void ymodem_send_packet (ConsoleParams *console_params, 
-                    uint8_t *txdata, int32_t block_nbr)
+static void ymodem_send_packet (ConsoleParams *cp, 
+              uint8_t *txdata, int32_t block_nbr)
   {
   int32_t tx_packet_size;
-  write_log ("Send packet");
 
   /* We use a short packet for block 0, all others are 1K */
   if (block_nbr == 0) 
@@ -546,35 +553,35 @@ static void ymodem_send_packet (ConsoleParams *console_params,
   uint16_t crc16_val = ymodem_crc16 (txdata, tx_packet_size);
 
   /* For 128 byte packets use SOH, for 1K use STX */
-  console_params->console_out_char (console_params->context,  (block_nbr == 0) ? YM_SOH : YM_STX );
+  cp->console_out_char (cp->context,  (block_nbr == 0) ? YM_SOH : YM_STX );
   /* write seq numbers */
-  write_log ("Send blocknum");
-  console_params->console_out_char (console_params->context, block_nbr & 0xFF);
-  console_params->console_out_char (console_params->context, ~block_nbr & 0xFF);
+  cp->console_out_char (cp->context, block_nbr & 0xFF);
+  cp->console_out_char (cp->context, ~block_nbr & 0xFF);
 
   /* write txdata */
   int32_t i;
-  write_log ("Send data");
   for (i = 0; i < tx_packet_size; i++) 
     {
-    console_params->console_out_char (console_params->context, txdata[i]);
+    cp->console_out_char (cp->context, txdata[i]);
     }
 
-  write_log ("Send crc");
   /* write crc16 */
-  console_params->console_out_char (console_params->context, (crc16_val >> 8) & 0xFF);
-  console_params->console_out_char (console_params->context, crc16_val & 0xFF);
+  write_log ("my crc is %04X", crc16_val);
+  cp->console_out_char (cp->context, (crc16_val >> 8) & 0xFF);
+  cp->console_out_char (cp->context, crc16_val & 0xFF);
   }
+
 
 /*=========================================================================
 
   ymodem_send_packet0
 
 =========================================================================*/
-static void ymodem_send_packet0 (ConsoleParams *console_params, 
-                    const char* filename, int32_t filesize)
+static void ymodem_send_packet0 (ConsoleParams *cp, const char* filename,
+                            int32_t filesize)
   {
   int32_t pos = 0;
+  /* put 256byte on stack, ok? reuse other stack mem? */
   uint8_t block [YM_PACKET_SIZE];
   if (filename) 
     {
@@ -597,22 +604,25 @@ static void ymodem_send_packet0 (ConsoleParams *console_params,
     }
   
   /* send header block */
-  ymodem_send_packet (console_params, block, 0);
+  ymodem_send_packet (cp, block, 0);
   }
+
 
 /*=========================================================================
 
   ymodem_send_data_packets
 
 =========================================================================*/
-static void ymodem_send_data_packets (ConsoleParams *console_params, 
-                    int fd, uint32_t txlen, uint32_t timeout_ms)
+static void ymodem_send_data_packets (ConsoleParams *cp, uint8_t* txdata,
+                                 uint32_t txlen,
+                                 uint32_t timeout_ms)
   {
-  write_log ("send_data_packets");
+  write_log ("Entering ym_snd_data_pkts");
   int32_t block_nbr = 1;
   
   while (txlen > 0) 
     {
+    write_log ("txlen is %d", (int)txlen);
     /* check if send full 1k packet */
     uint32_t send_size;
     if (txlen > YM_PACKET_1K_SIZE) 
@@ -623,22 +633,17 @@ static void ymodem_send_data_packets (ConsoleParams *console_params,
       {
       send_size = txlen;
       }
-
-    write_log ("About to read");
-    
-    uint8_t *txdata = malloc (send_size);
-    /*int n = */my_read (fd, txdata, send_size);
-
+    write_log ("send size is %d", (int)send_size);
     /* send packet */
-    ymodem_send_packet (console_params, txdata, block_nbr);
-    int32_t c = console_params->console_get_char_timeout 
-        (console_params->context, timeout_ms);
+    ymodem_send_packet (cp, txdata, block_nbr);
+    int32_t c = cp->console_get_char_timeout (cp->context, timeout_ms);
+    write_log ("Sent packet, got %d '%c'", c, c); 
     switch (c) 
       {
       case YM_ACK: 
         {
-        write_log ("Got ack");
-        // Move file pointer in case of retry
+        write_log ("Got ACK");
+        txdata += send_size;
         txlen -= send_size;
         block_nbr++;
         break;
@@ -646,65 +651,60 @@ static void ymodem_send_data_packets (ConsoleParams *console_params,
       case -1:
       case YM_CAN: 
         {
-        write_log ("Got can");
+        write_log ("Got CAN");
         return;
         }
       default:
-        {
-        write_log ("got nak");
-        }
+        write_log ("Got neither ACK nor CAN");
         break;
       }
-
-    free (txdata);
     }
   
+  write_log ("Done file loop");
   int32_t ch;
   do 
     {
-    console_params->console_out_char (console_params->context, YM_EOT);
-    ch = console_params->console_get_char_timeout 
-       (console_params->context, timeout_ms);
+    cp->console_out_char (cp->context, YM_EOT);
+    ch = cp->console_get_char_timeout (cp->context, timeout_ms);
     } while ((ch != YM_ACK) && (ch != -1));
   
-  // Send last data packet
+  /* send last data packet */
   if (ch == YM_ACK) 
     {
-    ch = console_params->console_get_char_timeout 
-       (console_params->context, timeout_ms);
+    ch = cp->console_get_char_timeout (cp->context, timeout_ms);
     if (ch == YM_CRC) 
       {
       do 
         {
-        ymodem_send_packet0 (console_params, 0, 0);
-        ch = console_params->console_get_char_timeout 
-               (console_params->context, timeout_ms);
+        ymodem_send_packet0 (cp, 0, 0);
+        ch = cp->console_get_char_timeout (cp->context, timeout_ms);
         } while ((ch != YM_ACK) && (ch != -1));
       }
     }
+  write_log ("Leaving ym_snd_data_pkts");
   }
+
+
 
 /*=========================================================================
 
   ymodem_send_data
 
 =========================================================================*/
-YmodemErr ymodem_send_data (ConsoleParams *console_params, int fd, 
-          const char *filename, uint32_t txsize)
+YmodemErr ymodem_send_data (ConsoleParams *cp, 
+          uint8_t *txdata, uint32_t txsize, const char *filename)
   {
+  write_log ("Entering ym_send_data");
   YmodemErr err = 0;
-  write_log ("send_data");
-
-  // Not in the specs -- send CRC here just for balance 
+  /* not in the specs, send CRC here just for balance */
   int32_t ch = YM_CRC;
   do 
     {
-    console_params->console_out_char (console_params->context, YM_CRC);
-    ch = console_params->console_get_char_timeout 
-       (console_params->context, 1000);
+    cp->console_out_char (cp->context, YM_CRC);
+    ch = cp->console_get_char_timeout (cp->context, 1000);
     } while (ch < 0);
 
-  // We insist on transfer with CRC 
+  /* we do require transfer with CRC */
   if (ch != YM_CRC) 
     {
     err = YmodemNoCRC;
@@ -715,59 +715,61 @@ YmodemErr ymodem_send_data (ConsoleParams *console_params, int fd,
   bool file_done = false;
   do 
     {
-    ymodem_send_packet0 (console_params, filename, txsize);
-    write_log ("sent packet 0");
+    write_log ("About to send pkt 0");
+    ymodem_send_packet0 (cp, filename, txsize);
     /* When the receiving program receives this block and successfully
-       opens the output file, it will acknowledge this block with an ACK
+       opened the output file, it shall acknowledge this block with an ACK
        character and then proceed with a normal XMODEM file transfer
        beginning with a "C" or NAK tranmsitted by the receiver. */
-    ch = console_params->console_get_char_timeout  
-            (console_params->context, YM_PACKET_RX_TIMEOUT_MS);
+    ch = cp->console_get_char_timeout (cp->context, YM_PACKET_RX_TIMEOUT_MS);
+    write_log ("Sent pkt 0, got %d '%c'", ch, ch);
 
     if (ch == YM_ACK) 
       {
-      write_log ("Got ack");
-      ch = console_params->console_get_char_timeout 
-        (console_params->context, YM_PACKET_RX_TIMEOUT_MS);
+      write_log ("Got ACK");
+      ch = cp->console_get_char_timeout (cp->context, YM_PACKET_RX_TIMEOUT_MS);
 
       if (ch == YM_CRC) 
         {
-        write_log ("About to send data packets");
-        ymodem_send_data_packets (console_params, fd, txsize, 
-           YM_PACKET_RX_TIMEOUT_MS);
+        write_log ("Got CRC after ACK");
+        ymodem_send_data_packets (cp, txdata, txsize, YM_PACKET_RX_TIMEOUT_MS);
         /* success */
         file_done = true;
         }
       else if (ch == YM_CAN)
         {
-        write_log ("Got can");
+        write_log ("Got CAN after ACK");
 	err = YmodemCancelled;
 	goto tx_err_handler;
 	}
       }
     else if ((ch == YM_CRC) && (crc_nak)) 
       {
-      write_log ("Got CRC && NAK");
+      write_log ("Got CRC after pkt 0");
       crc_nak = false;
       continue;
       }
     else if ((ch != YM_NAK) || (crc_nak)) 
       {
-      write_log ("Got NAK without CRC");
+      write_log ("Got NAK after pkt 0");
       err = YmodemBadPacket;
       goto tx_err_handler;
       }
     } while (!file_done);
 
+  write_log ("Leaving ym_send_data -- OK");
   return 0;
 
   tx_err_handler:
 
-  console_params->console_out_char (console_params->context, YM_CAN);
-  console_params->console_out_char (console_params->context, YM_CAN);
+  cp->console_out_char (cp->context, YM_CAN);
+  cp->console_out_char (cp->context, YM_CAN);
   my_sleep_ms (1000);
+  write_log ("Leaving ym_send_data -- Error");
   return err;
   }
+
+
 
 /*=========================================================================
 
@@ -780,13 +782,49 @@ YmodemErr ymodem_send (ConsoleParams *cp, const char *filename)
   int fd = my_open (filename, O_RDONLY);
   if (fd >= 0)
     {
+    // I can't tell you how many hours I wasted, tracing serial packets
+    // and what-not, before I realized that the stdio code in the Pico
+    // SDK was fiddling with cr/lf translation.
+#if PICO_ON_DEVICE
+    stdio_set_translate_crlf (&stdio_usb, false);
+#endif
+
     struct stat sb;
     filecontext_global_fstat (fd, &sb);
     uint32_t txsize = sb.st_size; 
     // TODO -- split basename off filename
-    err = ymodem_send_data (cp, fd, filename, txsize);
+
+    // This is a bit ugly -- pad read the whole file into memory,
+    //   into a zero'd area that will accomodate the whole file, 
+    //   and be an integer number of 1k blocks. This is nasty, but
+    //   it's easier than trying to work out how to calculate the
+    //   CRC differently for each block; and its easier to move
+    //   a memory pointer around if retries are needed, that to fiddle
+    //   with file offsets. Still -- ugh :/
+    
+    int pkts = txsize / YM_PACKET_1K_SIZE;
+    pkts++;
+
+    uint32_t rounded_size = pkts * YM_PACKET_1K_SIZE;
+
+    write_log ("rnd size=%d", rounded_size);
+
+    uint8_t *buff = malloc (rounded_size);
+
+    memset (buff, 0, rounded_size);
+
+    int n = my_read (fd, buff, txsize);
+    write_log ("Read %d bytes from file", n);
+
+    err = ymodem_send_data (cp, buff, txsize, filename);
+
+    free (buff);
 
     my_close (fd);
+
+#if PICO_ON_DEVICE
+    stdio_set_translate_crlf (&stdio_usb, true);
+#endif
     }
   else
     err = YmodemReadFile;

@@ -1,5 +1,3 @@
-ysend is still not working reliably on the Pico, although it works on Linux.
-
 Most the of the built-in shell commands are crude, and need further work.
 
 Implement a program search path.

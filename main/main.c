@@ -139,7 +139,7 @@ int main()
   
   // Uncomment to have the program go straight to ymodem recv.
   //shell_do_line ("yrecv", &console_params, picocpm);
-  //shell_do_line ("ysend te.com", &console_params, picocpm);
+  //shell_do_line ("ysend main.com", &console_params, picocpm);
 
   shell_main (&console_params, picocpm);
 
