@@ -18,9 +18,9 @@
 #include "error/error.h"
 #include "files/compat.h"
 #include "log/log.h"
-#include "files/blockdevice.h"
-#include "files/filesystemlfs.h"
-#include "files/lfs.h"
+#include "blockdevice/blockdevice.h"
+#include "fs/filesystemlfs.h"
+#include "fs/lfs.h"
 
 struct _FilesystemLfs 
   {

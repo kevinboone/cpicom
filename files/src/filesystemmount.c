@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "error/error.h"
-#include "files/blockdevice.h"
+#include "blockdevice/blockdevice.h"
 #include "files/filesystemmount.h"
 #include "files/filecontext.h"
 
@@ -224,7 +224,7 @@ Error filesystemmount_rename (FilesystemMount *self,
 // 
 // filesystemmount_statfs
 //
-extern Error filesystemmount_statfs (const FilesystemMount *self, 
+extern Error filesystemmount_statfs (FilesystemMount *self, 
           struct _my_statfs *statfs)
   {
   return self->fs_params.statfs (&self->fs_params, 

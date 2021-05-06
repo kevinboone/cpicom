@@ -9,15 +9,20 @@
   =========================================================================*/
 #if PICO_ON_DEVICE
 
+// Define the GPIO that will host the "disk LED", that will flash to
+//   indicate disk activity
+#define LED_GPIO 25
+
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include "pico/stdlib.h"
 #include "hardware/sync.h"
 #include "hardware/flash.h"
-#include "files/flashblockdevice.h"
+#include "blockdevice/flashblockdevice.h"
 #include "log/log.h"
 
 #define BLOCK_SIZE 4096
@@ -32,6 +37,7 @@ struct _FlashBlockDevice
   uint32_t flash_start;
   uint32_t pages;
   uint32_t flash_storage_start_mem;
+  alarm_id_t led_timer;
   };
 
 // 
@@ -44,6 +50,9 @@ FlashBlockDevice *flashblockdevice_create (uint32_t flash_start,
   self->flash_start = flash_start;
   self->pages = pages;
   self->flash_storage_start_mem = FLASH_START_MEM + flash_start;
+  gpio_init (LED_GPIO);
+  gpio_set_dir (LED_GPIO, GPIO_OUT);
+  self->led_timer = -1;
   return self;
   }
 
@@ -55,6 +64,30 @@ void flashblockdevice_destroy (FlashBlockDevice *self)
   if (self)
     {
     free (self);
+    }
+  }
+
+// 
+// flashblockdevice_action_timeout
+//
+int64_t flashblockdevice_action_timeout (alarm_id_t id, void *self) 
+  {
+  (void)id;
+  gpio_put (LED_GPIO, 0);
+  ((FlashBlockDevice *)self)->led_timer = -1;
+  return 0;
+  }
+
+// 
+// flashblockdevice_show_action
+//
+void flashblockdevice_show_action (FlashBlockDevice *self)
+  {
+  if (self->led_timer <= 0)
+    {
+    self->led_timer = add_alarm_in_ms (60, flashblockdevice_action_timeout, 
+      self, FALSE);
+    gpio_put (LED_GPIO, 1);
     }
   }
 
@@ -86,6 +119,7 @@ Error flashblockdevice_read_fn
   FlashBlockDevice *self = (FlashBlockDevice *) context;
   log_debug ("FlashBD: read %d bytes from offset %d in block %d\n", 
     (int)size, (int)off, (int)block);
+  flashblockdevice_show_action (self);
   char *mem = (char *)self->flash_storage_start_mem +
       ((int)block * (int)BLOCK_SIZE) + (int)off;
   memcpy (buffer, mem, size);
@@ -99,6 +133,7 @@ Error flashblockdevice_write_fn
   FlashBlockDevice *self = (FlashBlockDevice *) context;
   log_debug ("FlashBD: write %d bytes at offset %d in block %d\n", 
     (int)size, (int)off, (int)block);
+  flashblockdevice_show_action (self);
   int mem = self->flash_start +
       ((int)block * (int)BLOCK_SIZE) + (int)off;
   uint32_t ints = save_and_disable_interrupts();

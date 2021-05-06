@@ -16,8 +16,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "error/error.h"
-#include "files/filesystem.h"
-#include "files/blockdevice.h"
+#include "fs/filesystem.h"
+#include "blockdevice/blockdevice.h"
 #include "files/filecontext.h"
 
 struct _FilesystemParams;

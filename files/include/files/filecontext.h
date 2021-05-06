@@ -24,9 +24,9 @@
 #include "klib/defs.h"
 #include "error/error.h"
 #include "files/compat.h"
-#include "files/filesystem.h"
+#include "fs/filesystem.h"
 #include "files/filesystemmount.h"
-#include "files/blockdevice.h"
+#include "blockdevice/blockdevice.h"
 
 #define MAX_OPEN_FILES 64 
 #define MAX_FNAME 255

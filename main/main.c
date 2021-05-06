@@ -19,13 +19,13 @@
 #include "files/filecontext.h" 
 #include "pico/stdlib.h" 
 #if PICO_ON_DEVICE
-#include "files/flashblockdevice.h" 
+#include "blockdevice/flashblockdevice.h" 
 #else
-#include "files/fileblockdevice.h" 
+#include "blockdevice/fileblockdevice.h" 
 #endif
 
 #include "picocpm/picocpm.h" 
-#include "files/filesystemlfs.h" 
+#include "fs/filesystemlfs.h" 
 #include "error/error.h" 
 #include "shell/shell.h" 
 #include "console/console_stdio_vt100.h" 
@@ -141,7 +141,14 @@ int main()
   //shell_do_line ("yrecv", &console_params, picocpm);
   //shell_do_line ("ysend main.com", &console_params, picocpm);
 
+#if PICO_ON_DEVICE
+  // On the Pico, don't allow a ctrl+d to halt the board -- just reset
+  while (TRUE) {
+#endif
   shell_main (&console_params, picocpm);
+#if PICO_ON_DEVICE
+  }
+#endif
 
   picocpm_destroy (picocpm);
 

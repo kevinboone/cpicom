@@ -15,8 +15,8 @@
 
 #include <sys/types.h> 
 #include <sys/stat.h> 
-#include "files/blockdevice.h"
-#include "files/filesystem.h"
+#include "blockdevice/blockdevice.h"
+#include "fs/filesystem.h"
 #include "files/filecontext.h"
 
 // Number of filesystems that can be mounted (A: to P:)
@@ -91,7 +91,7 @@ extern Error filesystemmount_ftruncate (FilesystemMount *self,
 extern Error filesystemmount_rename (FilesystemMount *self, 
           const char *source, const char *target); 
           
-extern Error filesystemmount_statfs (const FilesystemMount *self, 
+extern Error filesystemmount_statfs (FilesystemMount *self, 
           struct _my_statfs *statfs);
           
 

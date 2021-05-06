@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "files/fileblockdevice.h"
+#include "blockdevice/fileblockdevice.h"
 #include "log/log.h"
 
 #if PICO_ON_DEVICE

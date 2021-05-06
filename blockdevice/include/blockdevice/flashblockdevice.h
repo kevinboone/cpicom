@@ -13,7 +13,7 @@
 #pragma once
 
 #include "error/error.h"
-#include "files/blockdevice.h"
+#include "blockdevice/blockdevice.h"
 
 struct _FlashBlockDevice;
 typedef struct _FlashBlockDevice FlashBlockDevice;

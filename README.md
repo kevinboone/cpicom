@@ -426,3 +426,17 @@ Licence v3.0. An overriding feature of all the licences for the various
 components in this repository is unrestricted distribution, with
 no warranty.
 
+# Revision history
+0.1a<br/>
+May 2021<br/>
+First working version
+
+0.1b<br/>
+May 2021<br/>
+- Added flashing disk LED<br/>
+- Various bug fixes<br/>
+
+
+
+
+

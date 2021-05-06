@@ -319,7 +319,7 @@ void shell_main (ConsoleParams *console_params, PicoCPM *picocpm)
   List *history = list_create (free);
   config = picocpm_get_config (picocpm);
   BOOL stop = FALSE;
-  shell_writeln (console_params, "CPICOM version 0.1a");
+  shell_writeln (console_params, "CPICOM version 0.1b");
   shell_writeln (console_params, "CP/M emulator for Raspberry Pi Pico");
   shell_writeln (console_params, "By Kevin Boone, and many others.");
   shell_writeln (console_params, "");

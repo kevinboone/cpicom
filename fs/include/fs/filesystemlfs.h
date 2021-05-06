@@ -12,7 +12,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "blockdevice.h"
+#include "blockdevice/blockdevice.h"
 #include "filesystem.h"
 
 struct _FilesystemLfs;
