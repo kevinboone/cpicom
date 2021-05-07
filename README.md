@@ -1,6 +1,6 @@
 # CPIOM
 
-Version 0.1a
+Version 0.1c
 
 ## What is this ?
 
