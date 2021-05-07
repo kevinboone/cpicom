@@ -108,7 +108,7 @@ warmboot(z80info *z80)
 {
 	unsigned int i;
 
-	closeall(z80);
+	closeall (z80);
 
 	if (silent_exit) {
 		finish(z80);

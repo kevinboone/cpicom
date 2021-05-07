@@ -190,7 +190,7 @@ int cpm_runprog (ConsoleParams *console_params, const char *cmdline,
   if (z80 == NULL)
     return -1;
 
-  sysreset(z80);
+  sysreset (z80);
 
   z80->finished = FALSE;
   while (!z80->finished)

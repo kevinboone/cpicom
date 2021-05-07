@@ -717,7 +717,6 @@ void check_BDOS_hook (z80info *z80) {
     case 17:	/* search for first */
 	if (dp)
 	    my_closedir(dp);
-	printf ("XXXXX\n");
 	if (!(dp = my_opendir ("."))) {
 	    printf ("errno=%d\n", errno);
 	    MYFPRINTFERR(stderr, "opendir fails\n");

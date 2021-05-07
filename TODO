@@ -9,3 +9,7 @@ not very elegant.
 
 TYPE command doesn't page.
 
+ASM has been know to crash the emulator, under circumstances I haven't
+been able to reproduce.
+
+

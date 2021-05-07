@@ -441,6 +441,7 @@ Error consolestdiovt100_get_line (void *context, char *buff, int len,
   while (!done)
     {
     int c = consolestdiovt100_get_key (context);
+
     if (c == VK_INTR)
       {
       got_line = TRUE;

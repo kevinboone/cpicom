@@ -236,6 +236,10 @@ Error shell_do_line_argv (int argc, char **argv,
     {
     ret = cmd_dump_run (argc, argv, console_params);
     }
+  else if (strncasecmp (argv[0], "untar", 3) == 0)
+    {
+    ret = cmd_untar_run (argc, argv, console_params);
+    }
   else if (strncasecmp (argv[0], "stat", 3) == 0)
     {
     ret = cmd_stat_run (argc, argv, console_params);
@@ -336,6 +340,7 @@ void shell_main (ConsoleParams *console_params, PicoCPM *picocpm)
       err = shell_do_line (buff, console_params, picocpm);
       if (err == ERROR_ENDOFINPUT)
         stop = TRUE;
+      shell_writeln (console_params, "");
       }
     else if (err == ERROR_ENDOFINPUT)
       stop = TRUE;

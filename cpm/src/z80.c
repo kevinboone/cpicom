@@ -11,6 +11,12 @@
 #include <string.h>
 #include "cpm/defs.h"
 
+// KB -- this is the CCP return address, pushed on the stack. We
+//   trap this an stop the emulator, to avoid (where possible)
+//   getting stuck in the CCP. It's impossible to avoid completely,
+//   unfortunately.
+#define CCP_RETURN 0xDB69 
+
 int strace = 0;
 int bdos_return = -1;
 
@@ -178,7 +184,7 @@ static boolean parity_inited = FALSE;
 \*-----------------------------------------------------------------------*/
 
 boolean
-z80_emulator(z80info *z80, int count)
+z80_emulator (z80info *z80, int count)
 {
 	byte t = 0, t1, t2, cy, v, *r = NULL;
 	word tt, tt2, hh, vv, *rr;
@@ -904,6 +910,11 @@ contsw:
 		SP++;
 		PC |= MEM(SP) << 8;
 		SP++;
+                if (PC == CCP_RETURN)
+                  {
+                  z80->finished = TRUE;
+                  return 0;
+                  }
 		break;
 	case 0xC0:					/* ret nz */
 	case 0xD0:					/* ret nc */

@@ -53,6 +53,8 @@ extern Error  cmd_stat_run (int argc, char **argv,
                   ConsoleParams *console_params);
 extern Error  cmd_format_run (int argc, char **argv, 
                   ConsoleParams *console_params);
+extern Error  cmd_untar_run (int argc, char **argv, 
+                  ConsoleParams *console_params);
 
 extern Error  shell_do_line (const char *buff, 
                  ConsoleParams *console_params, PicoCPM *picocmp);

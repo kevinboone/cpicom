@@ -229,6 +229,21 @@ Please note that all the CP/M commands are cut-down versions of the
 originals, to reduce the size of the program and allow more space on
 the Pico for storage.
 
+## Installing the standard "transient" commands
+
+Apart from the built-in commands, DIR, REN, etc., CP/M 2.2 was supplied
+with "transient" commands that had to loaded from disk. These included
+PIP (for copying files), and ED (the awful editor). The files are
+provided in a tar archive in the `misc/` directory. To install them,
+upload the file `cpm22disk.tar` using YModem as described above. Then,
+at the `A>` prompt, run 
+
+    A> untar cpm22disk.tar
+
+You'll need to have enough space on the virtual disk to unpack the 
+individual files, as well as the original archive. After unpacking, the
+archive can be deleted.
+
 ## Technical details
 
 CPICOM does not rely on any original CP/M files. However, since some
@@ -342,14 +357,14 @@ drive A: To run a program on drive B, you'll need to say "b:prog"
 I anticipate that proper utilities will be provided by CP/M executables,
 uploaded to the emulated disk drives,
 and I've only implemented very basic functionality in the CPICOM
-shell.
+shell -- the same commands that were built into CP/M's CCP command
+processor, plus commands for uploading, downloading, and unpacking
+files.
 
-For example, the shell provides no built-in way to copy files. 
+For example, the CPICOM shell provides no built-in way to copy files. 
 The original CP/M
-file copier `PIP.COM` works under CPICOM, and can be uploaded. 
-I can't distribute it for legal reasons, but it's easy to find.
-Like any other CP/M software you might encounter, however, you'll need
-to find the version that is appropriate for CP/M 2.2 with Z80 hardware.
+file copier `PIP.COM` works under CPICOM, and can installed as described
+above. 
 
 ### Terminal issues 
 
@@ -401,6 +416,30 @@ The ymodem sender reads the whole file into memory before sending it
 to the receiver. That's the Pico memory, not the Z80 memory, but
 this still creates a limit of about 200kB on file sizes.
 
+### Shell and CCP issues
+
+The CPICOM shell provides the same built-in commands as CCP, plus some
+additional support for uploading and downloading files, and unpacking
+archives. This support is needed for getting a functioning CP/M system,
+in an implementation that has no actual disk drives. 
+
+CPICOM also includes a "real" CCP, as part of P2DOS. This CCP handles things
+like setting up the file control blocks and parsing command lines. Otherwise,
+because it does not contain the utilities needed for managing a system
+like this, CPICOM tries to keep execution out of it. 
+
+I could have just used the real CCP, but that would have meant implementing
+all the extra features that CPICOM needs in Z80 assembler, and I just don't
+have time for that.
+
+Unfortunately, we have to have the real CCP, because sometimes CP/M utilities
+will invoke it directly. Some will even replace it with other things, but 
+expect it to be there. When that happens, execution can get stuck in the
+original CCP. The CCP shell and the CPICOM shell look almost identical, 
+and the only thing you'll likely notice is that the extra commands like
+`yrecv` don't work. You can get out of CCP and back to the CPICOM shell
+by hitting ctrl+c at the prompt.
+
 ## Author and legal
 
 The Z80 CPU emulator engine is largely based on work by Parag Patel from the
@@ -419,6 +458,10 @@ its owners have given permission for it to be distributed in binary
 form -- there is therefore no source for this component in this 
 bundle, only a binary embedded in a C source.
 
+The original CP/M 2.2 binaries (`PIP.COM`), etc., included in this
+repository have been all been released to
+the public domain. 
+
 The Pico interface, filesystem management, filesystem compatibility 
 layer, command-line interface (all other directories in the repository)
 are copyright (c)2021 Kevin Boone, under the terms of the GNU Public
@@ -433,10 +476,13 @@ First working version
 
 0.1b<br/>
 May 2021<br/>
-- Added flashing disk LED<br/>
-- Various bug fixes<br/>
+- Added flashing disk LED
+- Various bug fixes
 
-
+(untitled)<br/>
+May 2021<br/>
+- Added public-domain CP/M 2.2 transient commands as a tar file
+- Added untar command to CPICOM shell
 
 
 
