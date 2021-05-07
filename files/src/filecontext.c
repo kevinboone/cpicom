@@ -621,6 +621,49 @@ Error filecontext_dstatfs (const FileContext *self, uint8_t drive,
   return ret;
   }
 
+//
+// filecontext_activate_drive 
+//
+// 0=A, 1=B...
+Error filecontext_activate_drive (FileContext *self, 
+              uint8_t drive_num)
+  {
+  int ret;
+  if (drive_num >= FILESYSTEM_MAX_MOUNTS) return ERROR_BADDRIVELETTER;
+  FilesystemMount *mount = self->mounts [drive_num];
+  if (mount)
+    {
+    // TODO -- check for medium
+    ret = 0;
+    }
+  else
+    {
+    log_debug 
+        ("fc_activate: activt undef drv"); 
+    ret = ERROR_UNDEFINED_DRIVE; 
+    }
+  return ret;
+  }
+
+Error filecontext_stat (const FileContext *self, 
+                       uint8_t drive_num, const char *path, struct stat *sb)
+  {
+  int ret;
+  if (drive_num >= FILESYSTEM_MAX_MOUNTS) return ERROR_BADDRIVELETTER;
+  FilesystemMount *mount = self->mounts [drive_num];
+  if (mount)
+    {
+    ret = filesystemmount_stat (mount, path, sb);
+    }
+  else
+    {
+    log_debug
+        ("fc_stat: activt undef drv");
+    ret = ERROR_UNDEFINED_DRIVE;
+    }
+  return ret;
+
+  }
 
 //
 // filecontext_global_get_current_drive 
@@ -772,4 +815,20 @@ Error filecontext_global_format (uint8_t drive_num)
   return filecontext_format (global_fc, drive_num);
   }
 
+//
+// filecontext_global_activate_drive
+//
+Error filecontext_global_activate_drive (uint8_t drive_num)
+  {
+  return filecontext_activate_drive (global_fc, drive_num);
+  }
+
+//
+// filecontext_global_activate_stat
+//
+Error filecontext_global_stat (uint8_t drive_num, const char *path, 
+              struct stat *sb)
+  {
+  return filecontext_stat (global_fc, drive_num, path, sb);
+  }
 

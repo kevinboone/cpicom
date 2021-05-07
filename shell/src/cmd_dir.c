@@ -28,6 +28,13 @@ Error cmd_dir_run (int argc, char **argv,
     name = argv[1];
   else
     name = ".";
+
+  ConsoleProperties cprops;
+  console_params->console_get_properties (console_params->context, &cprops);
+  int space = 14; // 8 + 3 + separators
+  int num_across = cprops.width / space;
+  if (num_across == 0) num_across = 1;
+
   dir = my_opendir (name);
       
   // TODO limit to single file, if a filename is specified 
@@ -37,16 +44,18 @@ Error cmd_dir_run (int argc, char **argv,
     shell_reset_linecount();
     struct my_dirent *de = my_readdir (dir);
     BOOL stop = FALSE;
+    int across = 0;
     do
       {
       if (de->d_type == DT_REG_)
         {
-	uint32_t size = filecontext_global_size (dir->drive, de->d_name);
-	if (size == (uint32_t)-1) size = 0;
-        int recs = (size + (BDOS_RECORD_SIZE - 1)) / BDOS_RECORD_SIZE;
-        if (shell_writeln (console_params, 
-	      "%c: %-15s %-4d %d", dir->drive + 'A', de->d_name, 
-              (int)recs, (int)size) != 0) stop = TRUE;
+	shell_write_string (console_params, "%14s", de->d_name);
+	if (across == num_across - 1)
+	  {
+	  shell_writeln (console_params, "");
+	  across = 0;
+	  }
+	across++;
 	}
       de = my_readdir (dir);
       } while (de && !stop);

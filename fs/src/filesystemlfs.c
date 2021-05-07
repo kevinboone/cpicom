@@ -462,6 +462,7 @@ Error filesystemlfs_ftruncate (struct _FilesystemParams *fs_params,
          BlockDeviceParams *bd_params, struct _OpenFileInfo *ofi, 
 	 uint32_t length)
   {
+  (void)bd_params;
   FilesystemLfs *self = (FilesystemLfs *)fs_params->context; 
   lfs_file_t *file = ofi->opaque1;
   int lfs_err = lfs_file_truncate (&self->lfs, file, length);
@@ -475,6 +476,7 @@ Error filesystemlfs_rename (struct _FilesystemParams *fs_params,
            BlockDeviceParams *bd_params, const char *source, 
            const char *target)
   {
+  (void) bd_params;
   FilesystemLfs *self = (FilesystemLfs *)fs_params->context; 
   int lfs_err = lfs_rename (&self->lfs, source, target);
   return filesystemlfs_convert_error (lfs_err);

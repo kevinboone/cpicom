@@ -12,4 +12,7 @@ TYPE command doesn't page.
 ASM has been know to crash the emulator, under circumstances I haven't
 been able to reproduce.
 
+CLS function
+
+DIR should be able to match filename wildcard argument (STAT can)
 

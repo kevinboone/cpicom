@@ -848,3 +848,31 @@ int my_rename (const char *source, const char *target)
   return ret; 
   }
 
+//
+// my_stat
+//
+int my_stat (const char *filename, struct stat *statbuf)
+  {
+  int ret;
+  int drive = compat_get_drive (filename);
+  if (drive >= 0)
+    { 
+    const char *path = compat_get_path (filename);
+    Error err = filecontext_global_stat (drive, path, statbuf);
+    if (err != 0)
+      {
+      ret = -1;
+      errno = err;
+      }
+    else
+      ret = 0;
+    }
+  else
+    {
+    ret = -1;
+    errno = -drive;
+    }
+  return ret;
+  }
+
+

@@ -87,6 +87,16 @@
 //   is safer, but might irritate the user
 #define I_ESC_TIMEOUT 100
 
+// ANSI/VT100 control codes
+#define TERM_CLEAR "\033[2J"
+#define TERM_CLEAREOL "\033[K"
+#define TERM_HOME "\033[1;1H"
+#define TERM_CUR_BLOCK "\033[?6c"
+#define TERM_ERASE_LINE "\033[K"
+#define TERM_SET_CURSOR "\033[%d;%dH"
+#define TERM_SHOW_CURSOR "\033[?25h"
+#define TERM_HIDE_CURSOR "\033[?25l"
+
 // TODO put last_char in the Context when all the users of the console
 //  functions are actually able to supply a context :/
 int last_char = PICO_ERROR_TIMEOUT;
@@ -706,6 +716,33 @@ void consolestdiovt100_set_config (ConsoleStdioVT100 *self, Config *config)
   self->config = config;
   }
 
+//
+// get_properties
+//
+void consolestdiovt100_get_properties (void *context, 
+             ConsoleProperties *properties)
+  {
+  (void)context;
+  properties->width = 80;
+  properties->height = 24;
+  }
+
+//
+// consolestdiovt100_set_cursor
+//
+void consolestdiovt100_set_cursor (void *context, int row, int col)
+  {
+  consolestdiovt100_out_string (context, TERM_SET_CURSOR, row + 1, col + 1);
+  }
+
+//
+// consolestdiovt100_cls 
+//
+void consolestdiovt100_cls(void *context)
+  {
+  consolestdiovt100_out_string (context, TERM_CLEAR);
+  }
+
 // 
 // consolestdiovt100_get_params
 //
@@ -720,10 +757,12 @@ void consolestdiovt100_get_params (ConsoleStdioVT100 *self,
   params->console_get_line = consolestdiovt100_get_line; 
   params->console_get_key = consolestdiovt100_get_key; 
   params->console_peek_char = consolestdiovt100_peek_char; 
-  params->console_get_char_timeout = 
-     consolestdiovt100_get_char_timeout; 
+  params->console_get_char_timeout = consolestdiovt100_get_char_timeout; 
   params->console_set_interrupt_handler = 
      consolestdiovt100_set_interrupt_handler;
+  params->console_get_properties = consolestdiovt100_get_properties;
+  params->console_cls = consolestdiovt100_cls;
+  params->console_set_cursor = consolestdiovt100_set_cursor;
   }
 
 

@@ -136,6 +136,14 @@ extern Error        filecontext_dstatfs (const FileContext *self,
                             uint8_t drive, 
                             struct _my_statfs *statfs);
 
+/** Prepares a drive for first use (if preparation is actually required).
+    Checks that the drive is actually usable. Returns an error code if
+    it isn't. */
+extern Error        filecontext_activate_drive (FileContext *self, 
+                            uint8_t drive_num);
+
+extern Error        filecontext_stat (const FileContext *self, 
+                       uint8_t drive_num, const char *path, struct stat *sb);
 
 // Returns 0-16
 extern int          filecontext_global_get_current_drive (void);
@@ -143,12 +151,12 @@ void                filecontext_global_set_current_drive (uint8_t drive);
 
 // Sets errno, return fd or -1
 extern int          filecontext_global_open (uint8_t drive, 
-                        const char *path, int flags);
+                            const char *path, int flags);
 
 /** Gets the size of a file, if it exists. 
     Sets errno, returns size or (uint32_t)-1 */
 extern uint32_t     filecontext_global_size (uint8_t drive, 
-                       const char *path);
+                             const char *path);
 
 // Sets errno, return 0 or -1
 extern int          filecontext_global_close (int fd);
@@ -187,6 +195,11 @@ extern Error        filecontext_global_dstatfs (uint8_t drive,
 
 extern Error        filecontext_global_format (uint8_t drive_num);
 
+/** See filecontext_activate_drive for details. */
+extern Error        filecontext_global_activate_drive (uint8_t drive_num);
+
+extern Error        filecontext_global_stat (uint8_t drive_num, 
+                       const char *path, struct stat *sb);
 
 
 

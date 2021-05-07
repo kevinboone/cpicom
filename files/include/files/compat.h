@@ -109,6 +109,7 @@ extern struct my_dirent *my_readdir (struct _my_DIR *dir);
 extern int            my_creat (const char *path, int mode);
 extern uint32_t       my_lseek (int fd, uint32_t offset, int whence);
 extern int            my_fstat (int fd, struct stat *statbuf);
+extern int            my_stat (const char *path, struct stat *statbuf);
 extern int            my_ftruncate (int fd, uint32_t length);
 extern struct myfile *my_fopen (const char *filename, const char *mode);
 extern int32_t        my_fwrite (const void *ptr, int32_t size, 

@@ -57,6 +57,16 @@
 #define VK_INTR 2000 
 #define VK_EOI 2001 
 
+//
+// ConsoleProperties
+// This structure specifies the size and capabilities of the terminal 
+//
+typedef struct _ConsoleProperties
+  {
+  int width;
+  int height;
+  } ConsoleProperties;
+
 typedef void (*InterruptHandler) (void *interrupt_context);
 
 typedef void (*console_out_string_fn) (void *context, const char *fmt,...);
@@ -72,11 +82,23 @@ typedef int (*console_get_char_timeout_fn) (void *context, int timeout);
 typedef int (*console_peek_char_fn) (void *context);
 typedef void (*console_set_interrupt_handler_fn) (void *context, 
                InterruptHandler handler, void *int_context);
+typedef void (*console_get_properties_fn) (void *context, 
+               ConsoleProperties *properties); 
 
+/** Clear the screen; don't move the cursor. */
+typedef void (*console_cls_fn) (void *context);
+
+/** Move the cursor; don't change screen contents */
+typedef void (*console_set_cursor_fn) (void *context, int row, int col);
 
 // Get key NO ECHO
 typedef int (*console_get_key_fn) (void *context);
 
+//
+// ConsoleParams
+// This structure specifies the functions that all console handlers must
+// implement (although implementations might, in some cases, be empty)
+//
 typedef struct _ConsoleParams 
   {
   void *context;
@@ -89,5 +111,8 @@ typedef struct _ConsoleParams
   console_get_char_timeout_fn console_get_char_timeout;
   console_peek_char_fn console_peek_char;
   console_set_interrupt_handler_fn console_set_interrupt_handler;
+  console_get_properties_fn console_get_properties;
+  console_cls_fn console_cls;
+  console_set_cursor_fn console_set_cursor;
   } ConsoleParams;
 

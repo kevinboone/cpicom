@@ -26,7 +26,7 @@
 #include "picocpm/picocpm.h" 
 
 int shell_lines = 0;
-int shell_max_lines = 24; // TODO - get from console
+int shell_max_lines; // Get from console 
 
 // Storing this here is ugly but, what the heck, there's only going to
 //  be a single shell.
@@ -252,6 +252,12 @@ Error shell_do_line_argv (int argc, char **argv,
     {
     ret = cmd_setdef_run (argc, argv, console_params, config);
     }
+  else if (strcasecmp (argv[0], "cls") == 0)
+    {
+    console_params->console_cls (console_params->context);
+    console_params->console_set_cursor (console_params->context, 0, 0);
+    ret = 0;
+    }
   else if (shell_find_executable (argv[0], exe_path))
     {
     picocpm_run (picocpm, exe_path, argc, argv);
@@ -274,6 +280,9 @@ Error shell_do_line_argv (int argc, char **argv,
 Error shell_do_line (const char *buff, ConsoleParams *console_params,
         PicoCPM *picocpm)
   {
+  ConsoleProperties cprops;
+  console_params->console_get_properties (console_params->context, &cprops);
+  shell_max_lines = cprops.height; 
   config = picocpm_get_config (picocpm);
   if (buff[0] == 0) return 0;
 
@@ -323,7 +332,7 @@ void shell_main (ConsoleParams *console_params, PicoCPM *picocpm)
   List *history = list_create (free);
   config = picocpm_get_config (picocpm);
   BOOL stop = FALSE;
-  shell_writeln (console_params, "CPICOM version 0.1b");
+  shell_writeln (console_params, "CPICOM version 0.1c");
   shell_writeln (console_params, "CP/M emulator for Raspberry Pi Pico");
   shell_writeln (console_params, "By Kevin Boone, and many others.");
   shell_writeln (console_params, "");

@@ -13,3 +13,6 @@
 
 // Size of a CP/M record on disk
 #define BDOS_RECORD_SIZE 128
+
+// Size of a disk extent
+#define BDOS_EXTENT_SIZE 16384

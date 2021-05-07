@@ -150,6 +150,11 @@ I guess) but setting the "-k" switch sets 1k block sizes, which I've found
 is both faster and more robust. I have no idea why this is the case, and
 it might not be so for everyone.
 
+It isn't unusual, in my experience, for a transfer to require repeated
+retries, and still end up with a successful upload. I have no clue why
+this is -- I suspect that that host computer just sends data faster than
+the Pico's input buffer can cope with. 
+
 ### Download using YModem on Linux from the Pico
 
 If you need to download data from the Pico to a host computer, you
@@ -201,11 +206,12 @@ In a different terminal session:
 
 ## CPICOM shell commands
 
-The built-in commands are: `rename`, `type`, `erase`, `dir`, `yrecv`, `stat`,
-`dump`, `format`, and `setdef`. All except the last two can be abbreviated to
-the first three characters.  For compatibility with CP/M commands that may be
-provided as executable programs, all the built-in commands use CP/M syntax,
-which is comparatively unfamiliar to most people under the age of 50.   
+The built-in commands are: `cls`, `rename`, `type`, `erase`, `dir`, `yrecv`,
+`ysend`, `stat`, `dump`, `format`, `setdef`, and `quit`. Most can be
+abbreviated to the first three characters, as is the case for real CP/M.  For
+compatibility with CP/M commands that may be provided as executable programs,
+all the built-in commands use CP/M syntax, which is comparatively unfamiliar to
+most people under the age of 50.   
 
 For example, to rename file X to file Y, both on drive A:, you need:
 
@@ -228,6 +234,71 @@ on a different drive, using the drive letter, like this:
 Please note that all the CP/M commands are cut-down versions of the 
 originals, to reduce the size of the program and allow more space on
 the Pico for storage.
+
+### cls
+
+Clear the screen and move the cursor to the top left.
+
+### dir
+
+Get a directory listing. Note that, as in real CP/M 2.2, this command
+does not show file sizes -- use `stat` instead.
+
+### dump
+
+Display a file's contents in hexadecimal.
+
+### erase
+
+Erase one or more files. Wildcards are accepts. 
+
+### format
+
+Reformat a disk. Use a drive specification (e.g., `format b:`) to
+format a particular disk.
+
+### quit
+
+On the Linux version, exits the emulator. On a Pico, restarts the
+shell.
+
+### rename
+
+Rename a file. This command use CP/M syntax, so 
+
+    A> rename x=y 
+
+makes `x` the new name of `y`. This is the opposite order for most
+contemporary shells.
+
+Filenames can include drive letters, but you can't `rename` a file from
+one drive to another -- use `pip` (which you'll have to install) for that.
+
+### setdef
+
+Sets a configuration variable. At present the only configuration is
+for paging and flow control; more will likely be added in future.
+
+### stat
+
+Show file or disk usage. `stat` on its own lists the capacity remaining
+on all disks. `stat b:` shows capacity remaining on drive `b:`. 
+`stat` with a filename, or file pattern, shows the size of disk of 
+the selected file(s).
+
+### type
+
+Display an ASCII text file
+
+### yrecv
+
+Receive a file using YModem. If a filename is specified, this is the file
+that will be created. Otherwise, the filename will be supplied by the sender.
+
+### ysend
+
+Send a file using YModem. The filename most be specified.
+
 
 ## Installing the standard "transient" commands
 
@@ -479,10 +550,12 @@ May 2021<br/>
 - Added flashing disk LED
 - Various bug fixes
 
-(untitled)<br/>
+0.1c<br/>
 May 2021<br/>
 - Added public-domain CP/M 2.2 transient commands as a tar file
 - Added untar command to CPICOM shell
+- Added cls command
+- Tidied up the DIR and STAT commands to make them more authentic
 
 
 
