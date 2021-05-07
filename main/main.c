@@ -59,10 +59,14 @@ int main()
   Error errB = flashblockdevice_initialize (fbd_b);
   flashblockdevice_get_params (fbd_b, &bd_params_b);
 #else
-  FileBlockDevice *fbd_a = fileblockdevice_create ("/home/kevin/drive-a.dsk");
+  const char *home = getenv ("HOME");
+  char path[MAX_FNAME];
+  sprintf (path, "%s/drive-a.dsk", home);
+  FileBlockDevice *fbd_a = fileblockdevice_create (path);
   Error errA = fileblockdevice_initialize (fbd_a);
   fileblockdevice_get_params (fbd_a, &bd_params_a);
-  FileBlockDevice *fbd_b = fileblockdevice_create ("/home/kevin/drive-b.dsk");
+  sprintf (path, "%s/drive-b.dsk", home);
+  FileBlockDevice *fbd_b = fileblockdevice_create (path);
   Error errB = fileblockdevice_initialize (fbd_b);
   fileblockdevice_get_params (fbd_b, &bd_params_b);
 #endif

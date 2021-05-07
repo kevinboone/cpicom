@@ -257,10 +257,10 @@ static int32_t ymodem_rx_packet (ConsoleParams *console_params,
 
 /*=========================================================================
 
-  ymodem_receive
+  ymodem_receive_
 
 =========================================================================*/
-YmodemErr ymodem_receive (ConsoleParams *console_params, 
+YmodemErr ymodem_receive_ (ConsoleParams *console_params, 
      const char *out_filename, uint32_t maxsize)
   {
   YmodemErr err = 0;
@@ -348,7 +348,7 @@ YmodemErr ymodem_receive (ConsoleParams *console_params,
               {
               /* normal packet, check sequence number */
               write_log ("Normal pkt");
-              uint8_t seq_nbr = rx_packet_data[YM_PACKET_SEQNO_INDEX];
+              uint8_t seq_nbr = rx_packet_data [YM_PACKET_SEQNO_INDEX];
               if (seq_nbr != (packets_rxed & 0xff)) 
                 {
                 /* wrong sequence number */
@@ -421,7 +421,7 @@ YmodemErr ymodem_receive (ConsoleParams *console_params,
                     {
                     // Filename packet is empty, end session 
                     // TODO -- carry on if no filename
-                    write_log ("FIlename pkt empty, but send ACK");
+                    write_log ("Filename pkt empty, but send ACK");
                     console_params->console_out_char 
 		      (console_params->context, YM_ACK);
                     file_done = TRUE;
@@ -486,6 +486,27 @@ YmodemErr ymodem_receive (ConsoleParams *console_params,
   my_sleep_ms (1000);
   
   return err;
+  }
+
+/*=========================================================================
+
+  ymodem_receive
+
+=========================================================================*/
+YmodemErr ymodem_receive (ConsoleParams *console_params, 
+     const char *out_filename, uint32_t maxsize)
+  {
+#if PICO_ON_DEVICE
+  stdio_set_translate_crlf (&stdio_usb, false);
+#endif
+
+  YmodemErr ret = ymodem_receive_ (console_params, out_filename, maxsize);
+
+#if PICO_ON_DEVICE
+  stdio_set_translate_crlf (&stdio_usb, true);
+#endif
+ 
+  return ret;
   }
 
 /*=========================================================================
