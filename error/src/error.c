@@ -35,6 +35,10 @@ const char *error_strerror (Error error)
     case ERROR_CMDLINE_TOO_LONG: return "Command line too long";
     case ERROR_UNIMPLEMENTED: return "Unimplemented feature";
     case ERROR_CMD_SYNTAX: return "Command syntax error";
+    case ERROR_DRIVE_NOT_READY: return "Drive not ready";
+    case ERROR_DISK_LOWLEVEL: return "Lowlevel disk error";
+    case ERROR_FILENAME: return "Invalid filename";
+    case ERROR_INTERNAL: return "Unknown internal error";
     }
   return NULL;
   }

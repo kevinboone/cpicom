@@ -1,6 +1,6 @@
 # CPIOM
 
-Version 0.1c
+Version 0.1d
 
 ## What is this ?
 
@@ -406,6 +406,16 @@ end-of-line marker in a test file, rather than the "LF" that Linux uses
 Utilities like `dos2unix` can convert CP/M text files to and from Linux
 format.
 
+CPICOM has preliminary FAT filesystem support. At present, it is
+not enabled by default -- look for `TEST_FAT` in `main.c`). FAT filesystem
+support will only useful on the Pico when I have added support for
+external storage. On Linux, there's something to be said for using
+FAT for testing purposes,
+ because standard Linux tools can be used to copy files in and out
+-- this is easier than using YModem transfers with the running emulator.
+However, I haven't used the FAT support enough yet to know whether it
+is reliable, which is why it isn't enabled by default. 
+
 ## Limitations
 
 There are almost too many to list, let alone describe. There are the 
@@ -513,15 +523,20 @@ by hitting ctrl+c at the prompt.
 
 ## Author and legal
 
+CPICOM integrates code, in both source and binary form, from many 
+different authors.
+
 The Z80 CPU emulator engine is largely based on work by Parag Patel from the
 1980s. Basic CP/M BDOS support was implemented for this emulator
  by Joseph Allen. I believe
 that the source code for these components is freely distributable. They
-are in the `cpm` directory of this repository.
+are in the `cpm/` directory of this repository.
 The YModem implementation, in the `yodem` directory,
 is based on work by Fredrik Hederstierna, now
-believe to be in the public domain. The 
-The "LittleFS" filesystem implementation (`files/*/lfs*`)
+believe to be in the public domain. 
+
+The 
+The "LittleFS" filesystem implementation (`fs/*/lfs*`)
 was developed by ARM, and is
 open source under the terms of the BSD-3-Clause licence. 
 The embeded P2DOS implementation of CP/M BDOS is not open source, but
@@ -530,15 +545,19 @@ form -- there is therefore no source for this component in this
 bundle, only a binary embedded in a C source.
 
 The original CP/M 2.2 binaries (`PIP.COM`), etc., included in this
-repository have been all been released to
+repository (`misc/` directory) have been all been released to
 the public domain. 
+
+The FAT filesystem driver (`fs/*/ff*`) is distributed by an 
+individual identified
+as ChaN, under terms compatible with the GPL. 
 
 The Pico interface, filesystem management, filesystem compatibility 
 layer, command-line interface (all other directories in the repository)
 are copyright (c)2021 Kevin Boone, under the terms of the GNU Public
 Licence v3.0. An overriding feature of all the licences for the various
 components in this repository is unrestricted distribution, with
-no warranty.
+no warranty, provided that the original authors are attributed.
 
 # Revision history
 0.1a<br/>
@@ -556,6 +575,4 @@ May 2021<br/>
 - Added untar command to CPICOM shell
 - Added cls command
 - Tidied up the DIR and STAT commands to make them more authentic
-
-
 

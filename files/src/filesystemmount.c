@@ -176,10 +176,10 @@ uint32_t filesystemmount_lseek (FilesystemMount *self,
 // 
 // filesystemmount_size
 //
-uint32_t filesystemmount_size (FilesystemMount *self, const char *path)
-  {
-  return self->fs_params.size (&self->fs_params, &self->bd_params, path); 
-  }
+//uint32_t filesystemmount_size (FilesystemMount *self, const char *path)
+//  {
+//  return self->fs_params.size (&self->fs_params, &self->bd_params, path); 
+//  }
 
 // 
 // filesystemmount_stat

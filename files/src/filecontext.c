@@ -476,31 +476,6 @@ uint32_t filecontext_lseek (FileContext *self, int fd, uint32_t offset,
   }
 
 //
-// filecontext_size
-//
-uint32_t filecontext_size (const FileContext *self, uint8_t drive, 
-      const char *path)
-  {
-  uint32_t ret = (uint32_t)-1;
-  if (drive >= FILESYSTEM_MAX_MOUNTS) 
-    {
-    errno = ERROR_BADDRIVELETTER;
-    return ret;
-    }
-
-  FilesystemMount *mount = self->mounts [drive];
-  if (mount)
-    {
-    ret = filesystemmount_size (mount, path);
-    }
-  else
-    {
-    errno = ERROR_UNDEFINED_DRIVE; 
-    }
-  return ret;
-  }
-
-//
 // filecontext_fstat
 // 
 Error filecontext_fstat (const FileContext *self, int fd, struct stat *sb)
@@ -763,14 +738,6 @@ const OpenFileInfo *filecontext_global_get_ofi (int i)
 uint32_t filecontext_global_lseek (int fd, uint32_t offset, int whence)
   {
   return filecontext_lseek (global_fc, fd, offset, whence);
-  }
-
-//
-// filecontext_global_lseek
-//
-uint32_t filecontext_global_size (uint8_t drive, const char *path)
-  {
-  return filecontext_size (global_fc, drive, path); 
   }
 
 //

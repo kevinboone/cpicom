@@ -24,8 +24,15 @@
 #include "blockdevice/fileblockdevice.h" 
 #endif
 
+//#define TEST_FAT 1
+
 #include "picocpm/picocpm.h" 
 #include "fs/filesystemlfs.h" 
+
+#ifdef TEST_FAT
+#include "fs/filesystemfat.h" 
+#endif
+
 #include "error/error.h" 
 #include "shell/shell.h" 
 #include "console/console_stdio_vt100.h" 
@@ -51,6 +58,10 @@ int main()
 
   BlockDeviceParams bd_params_a;
   BlockDeviceParams bd_params_b;
+#ifdef TEST_FAT
+  BlockDeviceParams bd_params_c;
+#endif
+
 #if PICO_ON_DEVICE
   FlashBlockDevice *fbd_a = flashblockdevice_create (0x50000, 180);
   Error errA = flashblockdevice_initialize (fbd_a);
@@ -69,6 +80,12 @@ int main()
   FileBlockDevice *fbd_b = fileblockdevice_create (path);
   Error errB = fileblockdevice_initialize (fbd_b);
   fileblockdevice_get_params (fbd_b, &bd_params_b);
+#ifdef TEST_FAT
+  sprintf (path, "%s/drive-c.dsk", home);
+  FileBlockDevice *fbd_c = fileblockdevice_create (path);
+  Error errC = fileblockdevice_initialize (fbd_c);
+  fileblockdevice_get_params (fbd_c, &bd_params_c);
+#endif
 #endif
 
   FilesystemLfs *lfsA = filesystemlfs_create ();
@@ -110,6 +127,25 @@ int main()
     }
   else
     log_error ("Can't create block device, error %d", errB); 
+
+#ifdef TEST_FAT
+  FilesystemFat *fatC = filesystemfat_create (0);
+  if (errC == 0)
+    {
+    filesystemfat_set_block_device (fatC, &bd_params_c);
+    FilesystemParams fs_params_c;
+    filesystemfat_get_params (fatC, &fs_params_c);
+
+    Error err = filecontext_mount (fc, 2, &fs_params_c, &bd_params_c);
+    if (err)
+      {
+      log_error ("Mount error %d", err);
+      }
+
+    }
+  else
+    log_error ("Can't create block device, error %d", errC); 
+#endif
 
 //=========
 /*
@@ -161,6 +197,9 @@ int main()
   //  if the individual handlers have been destroyed.
   if (lfsA) filesystemlfs_destroy (lfsA);
   if (lfsB) filesystemlfs_destroy (lfsB);
+#ifdef TEST_FAT
+  if (fatC) filesystemfat_destroy (fatC);
+#endif
 
 #if PICO_ON_DEVICE
   flashblockdevice_destroy (fbd_a);
@@ -168,6 +207,11 @@ int main()
 #else
   fileblockdevice_destroy (fbd_a);
   fileblockdevice_destroy (fbd_b);
+
+#ifdef TEST_FAT
+  fileblockdevice_destroy (fbd_c);
+#endif
+
 #endif
   consolestdiovt100_destroy (csvt100);
   }

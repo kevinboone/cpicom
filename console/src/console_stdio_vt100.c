@@ -97,6 +97,9 @@
 #define TERM_SHOW_CURSOR "\033[?25h"
 #define TERM_HIDE_CURSOR "\033[?25l"
 
+// Console buffer size
+#define CBUFSIZ 256
+
 // TODO put last_char in the Context when all the users of the console
 //  functions are actually able to supply a context :/
 int last_char = PICO_ERROR_TIMEOUT;
@@ -110,12 +113,19 @@ struct _ConsoleStdioVT100
 #else
   struct termios orig_termios;
 #endif
+  char cbuf[CBUFSIZ];
+  int bufpos;
+  alarm_id_t flush_timer;
+  BOOL flushing;
   };
 
 ConsoleStdioVT100 *consolestdiovt100_create (void)
   {
   ConsoleStdioVT100 *self = malloc (sizeof (ConsoleStdioVT100));
   memset (self, 0, sizeof (ConsoleStdioVT100));
+  self->bufpos = 0;
+  self->flush_timer = -1;
+  self->flushing = FALSE;
 #if PICO_ON_DEVICE
 #else
   tcgetattr (STDIN_FILENO, &self->orig_termios);
@@ -145,11 +155,65 @@ void consolestdiovt100_destroy (ConsoleStdioVT100 *self)
   }
 
 // 
+// consolestdiovt100_flush_out
+//
+void consolestdiovt100_flush_out (ConsoleStdioVT100 *self)
+  {
+  return; // Not yet enabled
+#if PICO_ON_DEVICE
+  if (self->flush_timer >= 0) cancel_alarm (self->flush_timer);
+#endif
+  self->flushing = TRUE;
+  self->flush_timer = -1;
+  self->cbuf[self->bufpos] = 0;
+  self->bufpos = 0;
+  printf ("%s", self->cbuf); 
+  self->flushing = FALSE;
+  }
+
+// 
+// consolestdiovt100_flush_timeout 
+//
+int64_t consolestdiovt100_flush_timeout (alarm_id_t id, void *self)
+  {
+  (void)id;
+  consolestdiovt100_flush_out ((ConsoleStdioVT100 *)self);
+  return 0;
+  }
+
+
+
+// 
+// consolestdiovt100_add_to_out_buf
+//
+#if PICO_ON_DEVICE
+void consolestdiovt100_add_to_out_buf (ConsoleStdioVT100 *self, int c)
+  {
+  while (self->flushing) sleep_ms (1);
+  self->cbuf [self->bufpos] = c;
+  self->bufpos++;
+  if (c == 10 || c == 13 || self->bufpos >= CBUFSIZ - 1)
+    {
+    consolestdiovt100_flush_out (self);
+    }
+  //else
+    {
+    if (self->flush_timer < 0)
+      {
+      self->flush_timer = add_alarm_in_ms 
+                                  (50, consolestdiovt100_flush_timeout, 
+                                  self, FALSE);
+      }
+    }
+  }
+#endif
+
+// 
 // consolestdiovt100_out_string
 //
-void consolestdiovt100_out_string (void *cp, const char *fmt,...)
+void consolestdiovt100_out_string (void *context, const char *fmt,...)
   {
-  (void)cp;
+  consolestdiovt100_flush_out ((ConsoleStdioVT100 *)(context));
   va_list ap;
   va_start (ap, fmt);
   vprintf (fmt, ap);
@@ -160,10 +224,10 @@ void consolestdiovt100_out_string (void *cp, const char *fmt,...)
 // 
 // consolestdiovt100_out_string_v
 //
-void consolestdiovt100_out_string_v (void *cp, 
+void consolestdiovt100_out_string_v (void *context, 
         const char *fmt, va_list ap)
   {
-  (void)cp;
+  consolestdiovt100_flush_out ((ConsoleStdioVT100 *)(context));
   vprintf (fmt, ap);
   fflush (stdout);
   }
@@ -171,9 +235,9 @@ void consolestdiovt100_out_string_v (void *cp,
 // 
 // consolestdiovt100_out_endl
 //
-void consolestdiovt100_out_endl (void *cp)
+void consolestdiovt100_out_endl (void *context)
   {
-  (void)cp;
+  consolestdiovt100_flush_out ((ConsoleStdioVT100 *)(context));
   puts ("\r"); // \n should be automatic
   }
 
@@ -221,9 +285,11 @@ void consolestdiovt100_out_char (void *context, int c)
   //ConsoleStdioVT100 *self = (ConsoleStdioVT100 *)context;
 #if PICO_ON_DEVICE
   putchar (c);
+  //consolestdiovt100_add_to_out_buf (self, c);
 #else
   putchar (c);
   fflush (stdout);
+  //consolestdiovt100_add_to_out_buf (self, c);
 #endif
   //int cc = consolestdiovt100_peek_char (context);
   //if (cc == I_PAUSE)
@@ -435,7 +501,8 @@ void consolestdiovt100_add_line_to_history (List *history, int max_history,
 Error consolestdiovt100_get_line (void *context, char *buff, int len, 
         int max_history, List *history)
   {
-  ConsoleParams *cp = (ConsoleParams *)context;
+  // ConsoleParams *cp = (ConsoleParams *)context;
+  ConsoleStdioVT100 *self = (ConsoleStdioVT100 *) context; 
   int pos = 0;
   BOOL done = 0;
   BOOL got_line = TRUE;
@@ -450,7 +517,7 @@ Error consolestdiovt100_get_line (void *context, char *buff, int len,
 
   while (!done)
     {
-    int c = consolestdiovt100_get_key (context);
+    int c = consolestdiovt100_get_key (self);
 
     if (c == VK_INTR)
       {
@@ -469,17 +536,17 @@ Error consolestdiovt100_get_line (void *context, char *buff, int len,
         {
         pos--;
         string_delete_c_at (sbuff, pos);
-        consolestdiovt100_out_char (context, O_BACKSPACE);
+        consolestdiovt100_out_char (self, O_BACKSPACE);
         const char *s = string_cstr (sbuff);
         int l = string_length (sbuff);
         for (int i = pos; i < l; i++)
           {
-          consolestdiovt100_out_char (context, s[i]);
+          consolestdiovt100_out_char (self, s[i]);
           }
-        consolestdiovt100_out_char (context, ' ');
+        consolestdiovt100_out_char (self, ' ');
         for (int i = pos; i <= l; i++)
           {
-          consolestdiovt100_out_char (context, O_BACKSPACE);
+          consolestdiovt100_out_char (self, O_BACKSPACE);
           }
         }
       }
@@ -675,11 +742,10 @@ Error consolestdiovt100_get_line (void *context, char *buff, int len,
 
   strncpy (buff, string_cstr(sbuff), len);
   string_destroy (sbuff);
-   //printf ("buff='%s'\n", buff);
 
   if (tempstr) free (tempstr);
 
-  consolestdiovt100_out_endl (cp->context); 
+  consolestdiovt100_out_endl (self); 
   histpos = -1; 
 
   if (interrupt)

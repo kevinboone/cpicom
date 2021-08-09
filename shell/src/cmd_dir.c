@@ -27,7 +27,7 @@ Error cmd_dir_run (int argc, char **argv,
   if (argc > 1)
     name = argv[1];
   else
-    name = ".";
+    name = "";
 
   ConsoleProperties cprops;
   console_params->console_get_properties (console_params->context, &cprops);
@@ -45,7 +45,7 @@ Error cmd_dir_run (int argc, char **argv,
     struct my_dirent *de = my_readdir (dir);
     BOOL stop = FALSE;
     int across = 0;
-    do
+    if (de) do
       {
       if (de->d_type == DT_REG_)
         {

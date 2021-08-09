@@ -5,7 +5,12 @@ Implement a program search path.
 Some work needs to be done on buffering character output. Repeated calls
 to putch() with single characters are absurdly slow on the Pico. That's
 perhaps not a huge deal in something that is generally slow, but it's still
-not very elegant. 
+not very elegant. However, my attempts to buffer character data internally,
+and send it in bursts, have not been hugely successful. There are all
+kinds of locking complications, and I suspect there are problem in that
+area in the USB library. WordStar fails with buffering enabled, and the
+particular feature of that program is it does a character read after
+every write. The connection remains unclear to me. 
 
 TYPE command doesn't page.
 
@@ -16,3 +21,6 @@ CLS function
 
 DIR should be able to match filename wildcard argument (STAT can)
 
+FAT filesystem support needs to be tested with different block sizes
+and block counts. In particular, it's not clear whether to use
+FAT or FAT32, and which works best in particular configurations.

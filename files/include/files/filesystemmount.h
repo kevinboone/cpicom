@@ -75,8 +75,8 @@ extern struct my_dirent *filesystemmount_readdir (FilesystemMount *self,
 extern uint32_t filesystemmount_lseek (FilesystemMount *self, 
           struct _OpenFileInfo *ofi, uint32_t offset, int whence);
 
-extern uint32_t filesystemmount_size (FilesystemMount *self, 
-          const char *path);
+//extern uint32_t filesystemmount_size (FilesystemMount *self, 
+//          const char *path);
 
 extern Error filesystemmount_fstat (FilesystemMount *self, 
           const struct _OpenFileInfo *ofi, struct stat *sb);

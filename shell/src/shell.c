@@ -258,6 +258,32 @@ Error shell_do_line_argv (int argc, char **argv,
     console_params->console_set_cursor (console_params->context, 0, 0);
     ret = 0;
     }
+  else if (strcasecmp (argv[0], "test1") == 0)
+    {
+    for (int i = 0; i < 200; i++)
+      {
+      printf ("%d 123456890111111234568902345689023456890234568902345689023456890\n", i);
+
+      for (int j = 0; j < 69; j++)
+        ; // Do nothing
+      }
+    printf ("\n");
+    ret = 0;
+    } 
+  else if (strcasecmp (argv[0], "test2") == 0)
+    {
+    for (int i = 0; i < 100; i++)
+      {
+      for (int j = 0; j < 70; j++)
+        {
+        console_params->console_out_char 
+           (console_params->context, 'x');
+        }
+      console_params->console_out_char 
+         (console_params->context, 10);
+      }
+    ret = 0;
+    }
   else if (shell_find_executable (argv[0], exe_path))
     {
     picocpm_run (picocpm, exe_path, argc, argv);
@@ -332,14 +358,14 @@ void shell_main (ConsoleParams *console_params, PicoCPM *picocpm)
   List *history = list_create (free);
   config = picocpm_get_config (picocpm);
   BOOL stop = FALSE;
-  shell_writeln (console_params, "CPICOM version 0.1c");
+  shell_writeln (console_params, "CPICOM version 0.1d");
   shell_writeln (console_params, "CP/M emulator for Raspberry Pi Pico");
   shell_writeln (console_params, "By Kevin Boone, and many others.");
   shell_writeln (console_params, "");
   while (!stop)
     {
     console_params->console_out_char 
-       (console_params, filecontext_global_get_current_drive() + 'A');
+       (console_params->context, filecontext_global_get_current_drive() + 'A');
     console_params->console_out_string (console_params->context, "> ");
     char buff[257];
     Error err = console_params->console_get_line (console_params->context, 

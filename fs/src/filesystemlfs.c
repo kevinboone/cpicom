@@ -525,7 +525,6 @@ void filesystemlfs_get_params (FilesystemLfs *self,
   fs_params->closedir = filesystemlfs_closedir;
   fs_params->readdir = filesystemlfs_readdir;
   fs_params->lseek = filesystemlfs_lseek;
-  fs_params->size = filesystemlfs_size;
   fs_params->stat = filesystemlfs_stat;
   fs_params->ftruncate = filesystemlfs_ftruncate;
   fs_params->rename = filesystemlfs_rename;

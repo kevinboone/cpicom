@@ -119,8 +119,8 @@ extern const OpenFileInfo *filecontext_get_ofi
 
 /** Gets the size of a file, if it exists. 
     Sets errno, returns size or (uint32_t)-1 */
-extern uint32_t     filecontext_size (const FileContext *self, 
-                        uint8_t drive, const char *path);
+//extern uint32_t     filecontext_size (const FileContext *self, 
+//                        uint8_t drive, const char *path);
 
 extern Error        filecontext_fstat (const FileContext *self, int fd, 
                         struct stat *sb);

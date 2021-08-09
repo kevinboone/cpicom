@@ -77,9 +77,9 @@ typedef Error (*filesystem_ftruncate_fn)
           (struct _FilesystemParams *fs_params, BlockDeviceParams *bd_params,
            struct _OpenFileInfo *ofi, uint32_t length); 
 
-typedef uint32_t (*filesystem_size_fn) 
-          (struct _FilesystemParams *fs_params, BlockDeviceParams *bd_params,
-           const char *path);
+//typedef uint32_t (*filesystem_size_fn) 
+//          (struct _FilesystemParams *fs_params, BlockDeviceParams *bd_params,
+//           const char *path);
 
 typedef Error (*filesystem_rename_fn) 
           (struct _FilesystemParams *fs_params, BlockDeviceParams *bd_params,
@@ -104,7 +104,7 @@ typedef struct _FilesystemParams
   filesystem_closedir_fn closedir;
   filesystem_readdir_fn readdir;
   filesystem_lseek_fn lseek;
-  filesystem_size_fn size;
+  //filesystem_size_fn size;
   filesystem_stat_fn stat;
   filesystem_ftruncate_fn ftruncate;
   filesystem_rename_fn rename;
