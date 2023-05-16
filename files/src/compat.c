@@ -781,11 +781,21 @@ int my_putc (int c, MYFILE *fp)
 //
 // my_fflush
 //
-void my_fflush (MYFILE *f)
+int my_fflush (MYFILE *f)
   {
   (void)f;
   // Nothing to do at present -- no buffering :/
+  // errno = err
+  // reutrn -1 ;
+  return 0;
   }
+
+int my_setattribute(MYFILE *f)
+{
+  // no attributes for now
+  return 0;
+}
+
 
 //
 // my_rename

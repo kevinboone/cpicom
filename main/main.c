@@ -38,6 +38,22 @@
 #include "console/console_stdio_vt100.h" 
 #include "console/console.h" 
 
+#if defined(PICO_W)
+#include "pico/stdlib.h"
+#include "pico/cyw43_arch.h"
+// get this from cpicom.elf.map, search for __flash_binary_end
+// then round up to 4K boundary
+#define PROGRAM_SIZE 0x78000
+#define BLOCKS_PER_DRIVE 189
+#else
+#define PROGRAM_SIZE 0x50000
+#define BLOCKS_PER_DRIVE 180
+#endif
+
+#define FLASH_SIZE 0x200000
+
+extern uint32_t __flash_binary_end;
+
 //
 // Start here
 //
@@ -45,10 +61,30 @@ int main()
   {
   stdio_init_all();
 
+#if defined(PICO_W)
+  if (cyw43_arch_init()) {
+      printf("Wi-Fi init failed");
+      return -1;
+  }
+  // seems like this is required here to keep it from crashing
+  cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+
+/*  
+  int cnt = 1 ;
+  while(cnt > 0 ) {
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+        sleep_ms(250);
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+        sleep_ms(250);
+        cnt--;
+  }
+  */
+#endif
+
   //log_set_level (LOGLEVEL_TRACE);
   log_set_level (LOGLEVEL_WARN);
   ConsoleStdioVT100 *csvt100 = consolestdiovt100_create();
-
+  
   ConsoleParams console_params;
   consolestdiovt100_get_params (csvt100, &console_params); 
   log_set_console (&console_params);
@@ -63,10 +99,14 @@ int main()
 #endif
 
 #if PICO_ON_DEVICE
-  FlashBlockDevice *fbd_a = flashblockdevice_create (0x50000, 180);
+  if( (FLASH_SIZE - PROGRAM_SIZE)/2/4096 < BLOCKS_PER_DRIVE ) {
+    printf("ERROR:There is %d bytes of FLASH available\n", (unsigned int)(FLASH_SIZE - PROGRAM_SIZE) );
+    printf("That means maximum of %d 4K blocks per drive\n",  (unsigned int)(FLASH_SIZE - PROGRAM_SIZE)/2/4096);
+  } 
+  FlashBlockDevice *fbd_a = flashblockdevice_create (PROGRAM_SIZE, BLOCKS_PER_DRIVE);
   Error errA = flashblockdevice_initialize (fbd_a);
   flashblockdevice_get_params (fbd_a, &bd_params_a);
-  FlashBlockDevice *fbd_b = flashblockdevice_create (0x106000, 180);
+  FlashBlockDevice *fbd_b = flashblockdevice_create (PROGRAM_SIZE + ((BLOCKS_PER_DRIVE+1) * 4096) , BLOCKS_PER_DRIVE );
   Error errB = flashblockdevice_initialize (fbd_b);
   flashblockdevice_get_params (fbd_b, &bd_params_b);
 #else
@@ -187,6 +227,7 @@ int main()
 #endif
   shell_main (&console_params, picocpm);
 #if PICO_ON_DEVICE
+
   }
 #endif
 
@@ -213,6 +254,12 @@ int main()
 #endif
 
 #endif
+
+
+#if defined(PICO_W)  
+  cyw43_arch_deinit(); 
+#endif
+
   consolestdiovt100_destroy (csvt100);
   }
 
