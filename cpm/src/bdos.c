@@ -242,20 +242,40 @@ static MYFILE *lookfp(z80info *z80, unsigned where) {
     return NULL;
 }
 
+static int flushallfps() {
+    int i;
+    for(i = 0; i < storedfps; ++i)
+        if( stfps[i].fp !=0 ) {
+	    int retv = my_fflush( stfps[i].fp ); 
+	    if( 0 != retv ) {
+		return retv;
+            }
+	}
+    return 0 ;
+}
+
 /* Report an error finding an FCB. */
 
 static void fcberr(z80info *z80, unsigned where) {
     int i;
+    char name[9];
+    char *ptr = (char*)(z80->mem+where+1);
+    ptr = (ptr != NULL) ? ptr : "<NULL>";
+    memcpy( name, ptr,8);
+    name[8]=0;
 
     MYFPRINTFERR (stderr, "error: cannot find fp entry for FCB at %04x"
-	    " fctn %d, FCB named %s\n", where, z80->regbc & 0xff,
-	    z80->mem+where+1);
+	    " fctn %d, FCB named %s\n", where, z80->regbc & 0xff, name );
+
     for (i = 0; i < storedfps; ++i)
 	if (stfps[i].where != 0xffffU)
 	    MYPRINTF("%s %04x\n", stfps[i].name, stfps[i].where);
+
+    MYPRINTF("trying to keep going\n");
+    return;
     //resetterm();
     // TODO
-    exit(1);
+    //exit(1);
 }
 
 /* Get the host file for an FCB when it should be open. */
@@ -847,6 +867,11 @@ void check_BDOS_hook (z80info *z80) {
         B = H; A = L;
 	F = 0;
 	break;
+    case 30:    /* set attributes F_ATTRIB */
+	fp = getfp (z80, DE);
+	// sadly some apps call this after closing the file, so lets not crash
+	if(fp) MYFATTRIB(fp);
+	break;
     case 31:    /* get disk parameters */
         HL = DPB0;    /* only A: */
         B = H; A = L;
@@ -899,13 +924,23 @@ void check_BDOS_hook (z80info *z80) {
         HL = 0xFFFF;
         B = H; A = L;
 	break;
+    case 48:
+	{
+	    int err = flushallfps();
+	    if( err == -1 ) {
+		A = 0xFF;
+		H = errno;
+	    }
+	    break;
+	}
+	
     default:
 	MYPRINTF("\n\nUnrecognized BDOS-Function:\n");
 	MYPRINTF("AF=%04x  BC=%04x  DE=%04x  HL=%04x  SP=%04x\nStack =",
 	       AF, BC, DE, HL, SP);
 	for (i = 0; i < 8; ++i)
-	    MYPRINTF(" %4x", z80->mem[SP + 2*i]
-		   + 256 * z80->mem[SP + 2*i + 1]);
+		MYPRINTF(" %4x", z80->mem[SP + 2*i]
+		   		+ 256 * z80->mem[SP + 2*i + 1]);
 	MYPRINTF("\r\n");
 	//resetterm();
         // TODO

@@ -7,11 +7,12 @@
   Copyright (c)2001 Kevin Boone, GPL v3.0
 
   =========================================================================*/
+
+
 #if PICO_ON_DEVICE
 
-// Define the GPIO that will host the "disk LED", that will flash to
-//   indicate disk activity
-#define LED_GPIO 25
+
+ 
 
 #include <string.h>
 #include <stdio.h>
@@ -25,11 +26,22 @@
 #include "blockdevice/flashblockdevice.h"
 #include "log/log.h"
 
+#if defined(PICO_W)
+#include "pico/cyw43_arch.h"
+#define LED_GPIO CYW43_WL_GPIO_LED_PIN
+#else
+#define LED_GPIO 25
+#endif
+
+#define ENABLE_LED
+
 #define BLOCK_SIZE 4096
 // Where the flash starts in the ARM memory map (this is where the
 //   executable program is)
 #define FLASH_START_MEM 0x10000000
 
+// this variable is the last thing to be stored in flash
+// it cannot be set, but its address is usefull
 extern uint32_t __flash_binary_end;
 
 struct _FlashBlockDevice
@@ -40,6 +52,7 @@ struct _FlashBlockDevice
   alarm_id_t led_timer;
   };
 
+
 // 
 // flashblockdevice_create 
 //
@@ -47,11 +60,21 @@ FlashBlockDevice *flashblockdevice_create (uint32_t flash_start,
                             uint32_t pages)
   {
   FlashBlockDevice *self = malloc (sizeof (FlashBlockDevice));
+
   self->flash_start = flash_start;
   self->pages = pages;
   self->flash_storage_start_mem = FLASH_START_MEM + flash_start;
+  // verify that its divisible by 4096
+  if( (self->flash_storage_start_mem & (0xfff)) != 0x0 ) {
+    printf("ERROR:Flash memory drives must start on multiple of 0x1000\n");
+    printf("%s tried to start at:%x\n", __FUNCTION__, (unsigned int)self->flash_storage_start_mem );
+  }
+#if defined(ENABLE_LED)
+#if !defined(PICO_W)
   gpio_init (LED_GPIO);
   gpio_set_dir (LED_GPIO, GPIO_OUT);
+#endif  
+#endif
   self->led_timer = -1;
   return self;
   }
@@ -71,23 +94,35 @@ void flashblockdevice_destroy (FlashBlockDevice *self)
 // flashblockdevice_action_timeout
 //
 int64_t flashblockdevice_action_timeout (alarm_id_t id, void *self) 
-  {
+ {
   (void)id;
+#if defined(ENABLE_LED)
+#if defined(PICO_W)
+  cyw43_arch_gpio_put(LED_GPIO, 0);
+#else
   gpio_put (LED_GPIO, 0);
+#endif
+#endif
   ((FlashBlockDevice *)self)->led_timer = -1;
   return 0;
-  }
+ }
 
 // 
 // flashblockdevice_show_action
 //
 void flashblockdevice_show_action (FlashBlockDevice *self)
   {
-  if (self->led_timer <= 0)
+    if (self->led_timer <= 0)
     {
-    self->led_timer = add_alarm_in_ms (60, flashblockdevice_action_timeout, 
-      self, FALSE);
-    gpio_put (LED_GPIO, 1);
+      self->led_timer = add_alarm_in_ms (60, flashblockdevice_action_timeout, 
+        self, FALSE);
+#if defined(ENABLE_LED)
+#if defined(PICO_W)        
+      cyw43_arch_gpio_put(LED_GPIO, 1);
+#else
+      gpio_put (LED_GPIO, 1);
+#endif
+#endif
     }
   }
 
@@ -97,8 +132,9 @@ void flashblockdevice_show_action (FlashBlockDevice *self)
 Error flashblockdevice_initialize (FlashBlockDevice *self)
   {
   Error ret = 0;
-  if (self->flash_storage_start_mem < __flash_binary_end)
+  if (self->flash_storage_start_mem < (uint32_t)&__flash_binary_end)
     log_error ("Flash storage start is in the program area!");
+
   return ret;
   }
 

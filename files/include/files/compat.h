@@ -41,6 +41,7 @@
 #define MYFSTAT my_fstat 
 #define MYFTRUNCATE my_ftruncate
 #define MYRENAME my_rename
+#define MYFATTRIB my_setattribute
 
 // If FILE_COMPAT_UPPERCASE is defined, all filenames are written
 //   as uppercase
@@ -121,7 +122,8 @@ extern uint32_t       my_ftell (MYFILE *f);
 extern int            my_fseek (MYFILE *f, uint32_t offset, int whence); 
 extern int            my_getc (MYFILE *f);
 extern int            my_putc (int c, MYFILE *f);
-extern void           my_fflush (MYFILE *f);
+extern int            my_fflush (MYFILE *f);
+extern int            my_setattribute(MYFILE *f);
 extern void           my_fprintferr (void *f, const char *fmt, ...);
 extern int            my_rename (const char *source, const char *target);
 

@@ -8,7 +8,8 @@
 #include "blockdevice/blockdevice.h"
 #include "fs/ffconf.h"
 
-BlockDeviceParams bdp[FF_VOLUMES];
+// instantiated in ffdiskio.c
+extern BlockDeviceParams bdp[FF_VOLUMES];
 
 #ifdef __cplusplus
 extern "C" {

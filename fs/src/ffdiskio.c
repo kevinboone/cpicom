@@ -19,6 +19,11 @@
 #include "fs/ffdiskio.h"	
 #include "log/log.h"	
 
+// global object shall be defined here:
+BlockDeviceParams bdp[FF_VOLUMES];
+
+
+
 // 
 // disk_status
 //
